@@ -1,0 +1,43 @@
+# contact6 — ESP32-C6, Matter over Thread. Applied on a fresh build.
+
+CONFIG_IDF_TARGET="esp32c6"
+
+# --- Thread transport (802.15.4 auto-enabled by OpenThread on the C6) ---
+CONFIG_OPENTHREAD_ENABLED=y
+CONFIG_OPENTHREAD_SRP_CLIENT=y
+CONFIG_OPENTHREAD_DNS_CLIENT=y
+CONFIG_OPENTHREAD_LOG_LEVEL_DYNAMIC=n
+CONFIG_OPENTHREAD_LOG_LEVEL_NOTE=y
+CONFIG_OPENTHREAD_CLI=n
+
+# --- Disable Wi-Fi transport (dual-radio C6; using Thread only) ---
+CONFIG_ENABLE_WIFI_STATION=n
+CONFIG_ENABLE_WIFI_AP=n
+CONFIG_ESP_WIFI_SOFTAP_SUPPORT=n
+
+# --- mDNS: platform (not minimal) so SRP/Thread discovery works ---
+CONFIG_USE_MINIMAL_MDNS=n
+
+# --- BLE: needed for Matter commissioning; NimBLE host ---
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+
+# --- IPv6 / LwIP for Thread ---
+CONFIG_LWIP_IPV6_AUTOCONFIG=y
+CONFIG_LWIP_IPV6_NUM_ADDRESSES=8
+CONFIG_LWIP_MULTICAST_PING=y
+
+# --- mbedTLS bits Matter needs ---
+CONFIG_MBEDTLS_HKDF_C=y
+
+# --- Flash + custom partition table (Matter needs it) ---
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+CONFIG_PARTITION_TABLE_OFFSET=0xC000
+
+# --- Attestation: use the built-in TEST DAC (no CSA cert / factory data) ---
+# Leaving the factory data provider OFF keeps the example/test DAC + test setup
+# params (discriminator 3840, passcode 20202021).
+CONFIG_ENABLE_ESP32_FACTORY_DATA_PROVIDER=n
+CONFIG_ENABLE_TEST_SETUP_PARAMS=y

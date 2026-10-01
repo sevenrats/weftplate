@@ -1,0 +1,6 @@
+## esp-matter (and connectedhomeip, cmake_utilities, etc.) come from the checkout
+## at $ESP_MATTER_PATH, wired in via EXTRA_COMPONENT_DIRS in the top-level
+## CMakeLists.txt — not from the component manager. We only declare the IDF
+## version here so no components are downloaded at build time.
+dependencies:
+  idf: ">=5.2"

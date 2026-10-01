@@ -1,0 +1,35 @@
+# --- ESP-IDF / esp-matter build output ---
+build/
+# Managed components are fetched by the component manager on build; not sources.
+managed_components/
+# Lockfile is regenerated; our deps come from the pinned esp-matter Docker image.
+dependencies.lock
+
+# --- Generated sdkconfig (the tracked source of truth is sdkconfig.defaults) ---
+sdkconfig
+sdkconfig.old
+sdkconfig.ci
+# Any per-developer sdkconfig overrides.
+sdkconfig.defaults.*
+!sdkconfig.defaults
+
+# --- Flashing / debugging artifacts ---
+*.bin
+*.elf
+*.map
+*.hex
+*.log
+
+# --- Python / tooling ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# --- Editor / OS cruft ---
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
