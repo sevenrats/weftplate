@@ -1,0 +1,9 @@
+# Thread transport. Selected by `transport: thread` in weftplate.yaml.
+network:
+  enable_ipv6: true
+
+openthread:
+  # Operational dataset of the Thread network to join, as a hex TLV string.
+  # In Home Assistant: Settings -> Devices & services -> Thread -> (network)
+  # -> "i" -> Active dataset TLVs.
+  tlv: !secret thread_tlv

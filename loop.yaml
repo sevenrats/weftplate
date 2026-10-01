@@ -1,0 +1,17 @@
+# One dry-contact loop. Included by weftplate.yaml with vars `index` and `pin`.
+#
+# Loops beyond `num_loops` are still built (their pad stays a pulled-up input)
+# but are marked internal, so they are never exposed to Home Assistant.
+binary_sensor:
+  - platform: gpio
+    id: loop_${index}
+    name: "Loop ${index}"
+    internal: ${ index > num_loops | int }
+    device_class: ${loop_device_class}
+    pin:
+      number: ${pin}
+      mode:
+        input: true
+        pullup: true
+    filters:
+      - delayed_on_off: ${debounce}

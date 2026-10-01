@@ -1,0 +1,33 @@
+# --- ESPHome build output and per-user state ---
+.esphome/
+# Thread dataset, API key and OTA password. Copy secrets.yaml.example to start.
+secrets.yaml
+
+# --- Leftovers from the ESP-IDF / esp-matter build on the `matter` branch ---
+# (ignored there; they survive a branch switch as untracked files)
+build/
+managed_components/
+dependencies.lock
+sdkconfig
+sdkconfig.old
+
+# --- Flashing / debugging artifacts ---
+*.bin
+*.elf
+*.map
+*.hex
+*.log
+
+# --- Python / tooling ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# --- Editor / OS cruft ---
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db

@@ -1,0 +1,20 @@
+# Wi-Fi transport. Selected by `transport: wifi` in weftplate.yaml.
+#
+# No credentials are built in; the network is set over the air after flashing,
+# by any of:
+#   - Improv over BLE: Home Assistant (or the ESPHome app) discovers the device
+#     over Bluetooth and offers to set it up.
+#   - Improv over serial: web.esphome.io over the USB cable.
+#   - Fallback hotspot: join the "<name> Setup" network and pick a network in
+#     the captive portal that opens.
+# Credentials are saved to flash and survive reboots and OTA updates.
+wifi:
+  ap:
+    ssid: "${friendly_name} Setup"
+
+captive_portal:
+
+esp32_improv:
+  authorizer: none
+
+improv_serial:
