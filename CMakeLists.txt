@@ -1,4 +1,4 @@
-# weftplate — ESP32-C6 Matter-over-Thread dry-contact sensor board.
+# weftplate — ESP32-C6 Matter dry-contact sensor board, over Thread or Wi-Fi.
 #
 # Builds against the esp-matter checkout at $ESP_MATTER_PATH (pre-installed in the
 # espressif/esp-matter Docker image). This mirrors the boilerplate from
@@ -18,6 +18,22 @@ if(NOT DEFINED ENV{ESP_MATTER_DEVICE_PATH})
         set(ENV{ESP_MATTER_DEVICE_PATH} $ENV{ESP_MATTER_PATH}/device_hal/device/esp32c6_devkit_c)
     endif()
 endif()
+
+# Transport: passed by build.sh via -D WEFTPLATE_TRANSPORT=thread|wifi. Default
+# thread. Layers transport/<transport>.defaults over the common sdkconfig.defaults.
+# Each transport gets its own generated sdkconfig, because ESP-IDF only applies
+# defaults to settings an existing sdkconfig doesn't already have.
+if(NOT DEFINED WEFTPLATE_TRANSPORT)
+    set(WEFTPLATE_TRANSPORT thread)
+endif()
+if(NOT WEFTPLATE_TRANSPORT MATCHES "^(thread|wifi)$")
+    message(FATAL_ERROR "WEFTPLATE_TRANSPORT must be thread or wifi (got '${WEFTPLATE_TRANSPORT}')")
+endif()
+set(SDKCONFIG_DEFAULTS
+    "${CMAKE_CURRENT_LIST_DIR}/sdkconfig.defaults"
+    "${CMAKE_CURRENT_LIST_DIR}/transport/${WEFTPLATE_TRANSPORT}.defaults")
+set(SDKCONFIG "${CMAKE_BINARY_DIR}/sdkconfig.${WEFTPLATE_TRANSPORT}")
+message(STATUS "weftplate: building for Matter over ${WEFTPLATE_TRANSPORT}")
 
 set(ESP_MATTER_PATH $ENV{ESP_MATTER_PATH})
 set(MATTER_SDK_PATH ${ESP_MATTER_PATH}/connectedhomeip/connectedhomeip)

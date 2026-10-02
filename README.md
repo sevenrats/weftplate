@@ -3,15 +3,16 @@
 *Weaving your contacts into the fabric.*
 
 An open design for a small **ESP32-C6** module that presents up to **six
-dry-contact loops** as Matter **Contact Sensors** over **Thread**. Each loop's
-open/closed state appears to any Matter controller (Home Assistant, Apple Home,
-etc.) as a contact `binary_sensor`, joined to the Matter **fabric** over the
-Thread mesh — no cloud, no vendor bridge.
+dry-contact loops** as Matter **Contact Sensors** over **Thread** or **Wi-Fi**.
+Each loop's open/closed state appears to any Matter controller (Home Assistant,
+Apple Home, etc.) as a contact `binary_sensor`, joined to the Matter **fabric**
+over the Thread mesh or your Wi-Fi network — no cloud, no vendor bridge.
 
 The intent is a compact, self-contained way to bring "dumb" dry contacts —
 reed/door switches, relay outputs, pushbuttons, resistor-terminated alarm loops —
-into a Matter smart home as first-class sensors. The loop count is a build-time
-parameter, so the same codebase produces a one-input or a six-input module.
+into a Matter smart home as first-class sensors. The loop count and the transport
+are build-time parameters, so the same codebase produces a one-input Thread
+module or a six-input Wi-Fi one.
 
 > **Status: a design project, not a product.** This repository is firmware plus
 > (over time) the supporting hardware design. It is **not** a certified or listed
@@ -81,23 +82,30 @@ simplest, most reproducible path is the official `espressif/esp-matter` Docker
 image — no host toolchain install. Two wrapper scripts drive it:
 
 ```bash
-# Build for N loops (1..6; default 6). First build is long — it compiles
-# connectedhomeip from source inside the container.
-./docker-build.sh 3
+# Build for N loops (1..6; default 6) over a transport (thread|wifi; default
+# thread). First build is long — it compiles connectedhomeip from source inside
+# the container.
+./docker-build.sh 3 wifi
 
-# Flash the built firmware to a C6 on the given serial port (default /dev/ttyACM0).
-./docker-flash.sh /dev/ttyACM0
+# Flash that build to a C6 on the given serial port (default /dev/ttyACM0).
+./docker-flash.sh /dev/ttyACM0 wifi
 ```
 
 - `docker-build.sh` runs the image as the host user (so build artifacts aren't
   root-owned) with host networking (so the component manager can resolve
   esp-matter's few managed dependencies on first configure).
-- The loop count is passed as a CMake cache define: `idf.py -D WEFTPLATE_NUM_LOOPS=N`.
+- The loop count and transport are passed as CMake cache defines:
+  `idf.py -D WEFTPLATE_NUM_LOOPS=N -D WEFTPLATE_TRANSPORT=thread|wifi`.
+- The transport layers `transport/<transport>.defaults` over the common
+  `sdkconfig.defaults`. Each transport builds into its own `build/<transport>`
+  directory with its own generated sdkconfig, so switching transports never
+  reuses a stale configuration.
 - `docker-flash.sh` adds the host's `dialout` group so the container can open the
   serial device.
 
 If you already have ESP-IDF v5.4.1 + esp-matter exported in your shell
-(`idf.py` on `PATH`), `./build.sh N [flash]` does the same without Docker.
+(`idf.py` on `PATH`), `./build.sh N [thread|wifi] [flash]` does the same without
+Docker.
 
 On boot the firmware logs its configuration, e.g.:
 
@@ -108,7 +116,7 @@ weftplate: loop 2 -> GPIO2 -> endpoint 3
 weftplate: weftplate up: 3 loop(s) as Matter contact sensors over Thread
 ```
 
-## Commissioning (Matter over Thread)
+## Commissioning
 
 The firmware ships with Matter **test** attestation credentials (it is an
 uncertified/test device), using the standard Matter test onboarding values:
@@ -117,23 +125,34 @@ uncertified/test device), using the standard Matter test onboarding values:
 - **Discriminator:** `3840`
 - **Manual pairing code:** `34970112332`
 
-Commissioning requires a Matter controller and a Thread border router on the
-network. The device advertises over BLE for commissioning, then joins the Thread
-network and exposes *N* contact `binary_sensor` endpoints. In Home Assistant:
+For both transports the device advertises over BLE for commissioning, and the
+controller hands it the network to join; no network credentials are built into
+the firmware.
+
+- **Thread:** requires a Thread border router on the network. The controller
+  sends the Thread dataset over BLE, and the device joins the mesh.
+- **Wi-Fi:** the controller sends the Wi-Fi SSID and password over BLE (2.4 GHz
+  only), and the device joins as a station.
+
+Once on the network it exposes *N* contact `binary_sensor` endpoints. In Home Assistant:
 Settings → Devices & services → Matter → Add device → enter the manual pairing
-code. Because the endpoint count is fixed at build time, re-flashing with a
-different loop count means removing and re-adding the device in the controller.
+code. Because the endpoint count and transport are fixed at build time,
+re-flashing with a different loop count or transport means removing and
+re-adding the device in the controller.
 
 ## Repository layout
 
 ```
 weftplate/
-  CMakeLists.txt        # top-level ESP-IDF / esp-matter project
-  build.sh              # native build: ./build.sh N [flash]
-  docker-build.sh       # containerized build: ./docker-build.sh N
-  docker-flash.sh       # containerized flash: ./docker-flash.sh [PORT]
+  CMakeLists.txt        # top-level project; reads WEFTPLATE_TRANSPORT, picks defaults
+  build.sh              # native build: ./build.sh N [thread|wifi] [flash]
+  docker-build.sh       # containerized build: ./docker-build.sh N [thread|wifi]
+  docker-flash.sh       # containerized flash: ./docker-flash.sh [PORT] [thread|wifi]
   partitions.csv        # 4 MB Matter partition table
-  sdkconfig.defaults    # C6 + Thread + test-credential configuration
+  sdkconfig.defaults    # C6 + BLE + test-credential configuration (both transports)
+  transport/
+    thread.defaults     # OpenThread on, Wi-Fi off, platform mDNS
+    wifi.defaults       # Wi-Fi station on, OpenThread off
   main/
     app_main.cpp        # N contact-sensor endpoints, GPIO poll + debounce
     CMakeLists.txt       # reads WEFTPLATE_NUM_LOOPS, applies the compile define
@@ -142,8 +161,8 @@ weftplate/
 
 ## Design notes
 
-- **Thread-only transport.** Wi-Fi is disabled. A Matter-over-Wi-Fi variant is
-  possible by changing the Wi-Fi/OpenThread keys in `sdkconfig.defaults`.
+- **One transport per build.** The C6 has both radios, but a build enables only
+  the selected one; the other is compiled out.
 - **Polarity.** To treat *open* as the "contact" state, invert `read_closed()` in
   `main/app_main.cpp`.
 - **Certification.** The test attestation credentials make this an uncertified

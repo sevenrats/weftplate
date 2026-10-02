@@ -1,6 +1,6 @@
 /*
- * weftplate — expose N dry-contact loops as Matter Contact Sensors over Thread,
- * on an ESP32-C6.
+ * weftplate — expose N dry-contact loops as Matter Contact Sensors over Thread
+ * or Wi-Fi, on an ESP32-C6.
  *
  * Each loop is a GPIO with an internal pull-up: field contact shorts the pin to
  * GND. Contact CLOSED -> pin LOW -> Matter StateValue TRUE ("closed/contact",
@@ -9,6 +9,10 @@
  *
  * The number of loops is set at build time via -DWEFTPLATE_NUM_LOOPS=N (1..6),
  * supplied by build.sh. Default 6.
+ *
+ * The transport is set at build time via -DWEFTPLATE_TRANSPORT=thread|wifi
+ * (top-level CMakeLists.txt), which picks transport/<transport>.defaults. The
+ * code below follows from the resulting CHIP_DEVICE_CONFIG_ENABLE_* macros.
  *
  * Dry contacts ONLY. These GPIOs carry the C6's own 3.3V logic to GND through
  * your loop. Never connect them to mains or any external voltage.
@@ -214,5 +218,11 @@ extern "C" void app_main()
 
     xTaskCreate(loop_task, "contact_loops", 4096, nullptr, 5, nullptr);
 
-    ESP_LOGI(TAG, "weftplate up: %d loop(s) as Matter contact sensors over Thread", NUM_LOOPS);
+#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
+    static const char *transport = "Thread";
+#else
+    static const char *transport = "Wi-Fi";
+#endif
+    ESP_LOGI(TAG, "weftplate up: %d loop(s) as Matter contact sensors over %s",
+             NUM_LOOPS, transport);
 }

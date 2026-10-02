@@ -1,0 +1,8 @@
+# Matter over Wi-Fi. Selected by -D WEFTPLATE_TRANSPORT=wifi.
+# Wi-Fi credentials are delivered by the controller over BLE during commissioning.
+
+# --- Wi-Fi station transport ---
+CONFIG_ENABLE_WIFI_STATION=y
+
+# --- Disable Thread transport (dual-radio C6; using Wi-Fi only) ---
+CONFIG_OPENTHREAD_ENABLED=n

@@ -1,0 +1,15 @@
+# Matter over Thread. Selected by -D WEFTPLATE_TRANSPORT=thread (the default).
+
+# --- Thread transport (802.15.4 auto-enabled by OpenThread on the C6) ---
+CONFIG_OPENTHREAD_ENABLED=y
+CONFIG_OPENTHREAD_SRP_CLIENT=y
+CONFIG_OPENTHREAD_DNS_CLIENT=y
+CONFIG_OPENTHREAD_LOG_LEVEL_DYNAMIC=n
+CONFIG_OPENTHREAD_LOG_LEVEL_NOTE=y
+CONFIG_OPENTHREAD_CLI=n
+
+# --- Disable Wi-Fi transport (dual-radio C6; using Thread only) ---
+CONFIG_ENABLE_WIFI_STATION=n
+
+# --- mDNS: platform (not minimal) so SRP/Thread discovery works ---
+CONFIG_USE_MINIMAL_MDNS=n
