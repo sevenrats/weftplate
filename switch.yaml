@@ -1,0 +1,36 @@
+# One dry-contact switch input. Included by weftplate.yaml with vars `index`
+# and `pin`.
+#
+# Home Assistant sees each switch as an event entity that fires "toggled" every
+# time the switch changes position (after debounce), for use in automations.
+# The GPIO itself is read by an internal binary_sensor that is never exposed.
+#
+# Switches beyond `num_switches` are still built (their pad stays a pulled-up
+# input) but their event is marked internal, so they are never exposed to
+# Home Assistant.
+binary_sensor:
+  - platform: gpio
+    id: switch_${index}_input
+    internal: true
+    pin:
+      number: ${pin}
+      # Closed pulls the pin LOW; invert so closed reads ON.
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    filters:
+      - delayed_on_off: ${debounce}
+    # Fires on every debounced change; not on the initial state read at boot.
+    on_state:
+      - event.trigger:
+          id: switch_${index}
+          event_type: toggled
+
+event:
+  - platform: template
+    id: switch_${index}
+    name: "Switch ${index}"
+    internal: ${ index > num_switches | int }
+    event_types:
+      - toggled

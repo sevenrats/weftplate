@@ -1,42 +1,38 @@
-# weftplate — expose N dry-contact loops as contact binary_sensors over Thread
-# or Wi-Fi, on an ESP32-C6, using ESPHome.
+# weftplate — expose N dry-contact switches as Home Assistant events over
+# Thread or Wi-Fi, on an ESP32-C6, using ESPHome.
 #
-# Each loop is a GPIO with an internal pull-up: the field contact shorts the pin
-# to GND. Contact CLOSED -> pin LOW -> binary_sensor OFF ("closed").
-# Contact OPEN -> pin HIGH -> binary_sensor ON ("open"). This is the same
-# open/closed state Home Assistant shows for a Matter Contact Sensor.
+# Each switch is wired between a GPIO (internal pull-up) and GND. Every time a
+# switch changes position (closed <-> open), its event entity fires "toggled".
 #
-# The number of loops (1..6, default 6) and the transport (thread or wifi,
+# The number of switches (1..6, default 6) and the transport (thread or wifi,
 # default thread) are set at build time:
-#   esphome -s num_loops 3 -s transport wifi compile weftplate.yaml
+#   esphome -s num_switches 3 -s transport wifi compile weftplate.yaml
 #
 # Dry contacts ONLY. These GPIOs carry the C6's own 3.3V logic to GND through
-# your loop. Never connect them to mains or any external voltage.
+# your switch. Never connect them to mains or any external voltage.
 
 substitutions:
   name: weftplate
   friendly_name: weftplate
-  # Loop count, 1..6. Loops 1..num_loops are exposed to Home Assistant.
-  num_loops: "6"
+  # Switch count, 1..6. Switches 1..num_switches are exposed to Home Assistant.
+  num_switches: "6"
   # Transport to Home Assistant: thread or wifi. Selects transport/<transport>.yaml.
   transport: thread
   # Software debounce window.
   debounce: 40ms
-  # How Home Assistant labels each loop (door, window, opening, ...).
-  loop_device_class: door
 
-# Loop input pins for the Seeed XIAO ESP32-C6: the board's D0..D5 pads (a
-# contiguous run on one side), chosen to avoid the UART0 console
-# (D6/D7 = GPIO16/17), strapping, flash and USB pins. For a different C6 board,
-# change the pins here. Raw GPIO numbers differ from the XIAO's Dx labels.
+# Switch input pins for the Seeed XIAO ESP32-C6: the board's D0..D5 pads (a
+# contiguous run on one side), avoiding the strapping, flash and USB pins. For a
+# different C6 board, change the pins here. Raw GPIO numbers differ from the
+# XIAO's Dx labels.
 packages:
   transport: !include transport/${transport}.yaml
-  loop_1: !include { file: loop.yaml, vars: { index: 1, pin: GPIO0 } }   # D0
-  loop_2: !include { file: loop.yaml, vars: { index: 2, pin: GPIO1 } }   # D1
-  loop_3: !include { file: loop.yaml, vars: { index: 3, pin: GPIO2 } }   # D2
-  loop_4: !include { file: loop.yaml, vars: { index: 4, pin: GPIO21 } }  # D3
-  loop_5: !include { file: loop.yaml, vars: { index: 5, pin: GPIO22 } }  # D4
-  loop_6: !include { file: loop.yaml, vars: { index: 6, pin: GPIO23 } }  # D5
+  switch_1: !include { file: switch.yaml, vars: { index: 1, pin: GPIO0 } }   # D0
+  switch_2: !include { file: switch.yaml, vars: { index: 2, pin: GPIO1 } }   # D1
+  switch_3: !include { file: switch.yaml, vars: { index: 3, pin: GPIO2 } }   # D2
+  switch_4: !include { file: switch.yaml, vars: { index: 4, pin: GPIO21 } }  # D3
+  switch_5: !include { file: switch.yaml, vars: { index: 5, pin: GPIO22 } }  # D4
+  switch_6: !include { file: switch.yaml, vars: { index: 6, pin: GPIO23 } }  # D5
 
 esphome:
   name: ${name}
@@ -45,7 +41,7 @@ esphome:
   name_add_mac_suffix: true
   on_boot:
     then:
-      - logger.log: "weftplate up: ${num_loops} loop(s) as contact sensors over ${transport}"
+      - logger.log: "weftplate up: ${num_switches} switch(es) over ${transport}"
 
 esp32:
   board: seeed_xiao_esp32c6
